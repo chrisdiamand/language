@@ -26,6 +26,8 @@ struct sorted_list
 struct dict
 {
     struct sorted_list  tbl[N_BUCKETS];
+    /* For iterating */
+    unsigned int        bucket, pos;
 };
 
 static void insert_at_pos(struct sorted_list *L, struct keyvalue kv, int pos)
@@ -129,7 +131,7 @@ dict_value *dict_get(struct dict *D, char *key)
     return NULL;
 }
 
-void dict_print(struct dict *D)
+void dict_print(struct dict *D, dict_print_function_t printfunc)
 {
     int i, j;
     for (i = 0; i < N_BUCKETS; i++)
@@ -138,7 +140,9 @@ void dict_print(struct dict *D)
         printf("  Bucket %d: (", i);
         for (j = 0; j < L->len; j++)
         {
-            printf("\'%s\':%d", L->list[j].key, L->list[j].value);
+            printf("\'%s\':", L->list[j].key);
+            if (printfunc)
+                printfunc(L->list[j].value);
             if (j < L->len - 1)
                 printf(", ");
         }
@@ -146,3 +150,36 @@ void dict_print(struct dict *D)
     }
 }
 
+/* Set all iterator counters to 0 so iteration can begin */
+void dict_begin(struct dict *D)
+{
+    if (D)
+        D->bucket = D->pos = 0;
+}
+
+dict_value dict_next(struct dict *D, char **namep)
+{
+    struct keyvalue *item;
+    if  (!D)
+        return NULL;
+
+    /* See if it is finished */
+    if (D->bucket >= N_BUCKETS - 1
+        && D->pos >= D->tbl[N_BUCKETS - 1].len)
+        return NULL;
+
+    /* Do we need to move on to the next bucket? */
+    if (D->pos >= D->tbl[D->bucket].len)
+    {
+        D->bucket++;
+        D->pos = 0;
+    }
+
+    item = D->tbl[D->bucket].list + D->pos;
+
+    D->pos++;
+
+    if (namep)
+        *namep = item->key;
+    return item->value;
+}
