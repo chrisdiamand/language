@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -10,48 +11,31 @@ struct class_t *class_new(struct class_t *parent)
     struct class_t *ret = GC_malloc(sizeof(struct class_t));
 
     ret->parent = parent;
-    ret->dynamic_members = ret->static_members = NULL;
-
-    if (parent)
-        ret->max_index = parent->max_index;
-    else
-        ret->max_index = 0;
+    ret->members[DYNAMIC_MEMBER] = NULL;
+    ret->members[STATIC_MEMBER] = NULL;
 
     return ret;
 }
 
-void class_add_dynamic_member(struct class_t *C, char *name, struct object *value)
+void class_add_member(struct class_t *C, enum mtype sd, char *name, struct object *value)
 {
-    struct class_member *memb = GC_malloc(sizeof(struct class_member));
-    memb->val = value;
-    memb->index = 0;
+    assert(sd == DYNAMIC_MEMBER || sd == STATIC_MEMBER);
 
-    if (!C->dynamic_members)
-        C->dynamic_members = dict_new();
+    if (!C->members[sd])
+        C->members[sd] = dict_new();
 
-    dict_set(C->dynamic_members, name, memb);
-}
-
-void class_add_static_member(struct class_t *C, char *name, struct object *value)
-{
-    struct class_member *memb = GC_malloc(sizeof(struct class_member));
-    memb->val = value;
-    memb->index = 0;
-
-    if (!C->static_members)
-        C->static_members = dict_new();
-
-    dict_set(C->static_members, name, memb);
+    dict_set(C->members[sd], name, value);
 }
 
 void class_print(struct class_t *S)
 {
     printf("Scope %p: parent = %p\n", (void *) S, (void *) S->parent);
     printf("Members:");
-    if (S->static_members)
-        dict_print(S->static_members, NULL);
-    if (S->dynamic_members)
-        dict_print(S->dynamic_members, NULL);
+    if (S->members[STATIC_MEMBER])
+        dict_print(S->members[STATIC_MEMBER], NULL);
+
+    if (S->members[DYNAMIC_MEMBER])
+        dict_print(S->members[DYNAMIC_MEMBER], NULL);
 }
 
 struct object *object_new(void)
@@ -103,24 +87,37 @@ struct object *new_instance(struct class_t *C)
 
     I->type = C;
 
-    if (!C->num_dynamic_vals)
-        I->members = NULL;
-    else
-        I->members = GC_malloc(sizeof(struct object *) * C->num_dynamic_vals);
-
-    /* Populate the dynamic members of the new instance with objects of the
-     * correct types as specified in C and its parents */
-    while (C)
-    {
-        struct class_member *memb = NULL;
-        dict_begin(C->dynamic_members);
-
-        while ( (memb = dict_next(C->dynamic_members, NULL)) )
-            I->members[memb->index] = object_copy(memb->val);
-
-        C = C->parent;
-    }
+    /* Make new instances of the dynamic members. */
+    I->members = dict_copy(C->members[DYNAMIC_MEMBER]);
 
     return ret;
+}
+
+struct object *get_member(struct object *inst, enum mtype sd, char *name)
+{
+    struct instance *I = inst->v.inst;
+    struct object *O = NULL;
+    struct class_t *cl = NULL;
+    assert(inst->type == OBJECT_TYPE_INSTANCE);
+
+    switch (sd)
+    {
+        case DYNAMIC_MEMBER:
+            return (struct object *) dict_get(I->members, name);
+        case STATIC_MEMBER:
+            for (cl = I->type; cl != NULL; cl = cl->parent)
+            {
+                O = (struct object *) dict_get(cl->members[STATIC_MEMBER], name);
+                if (O)
+                    return O;
+            }
+            break;
+    }
+    return NULL;
+}
+
+void set_member(struct object *O, enum mtype sd, char *name, struct object *val)
+{
+    assert(O->type == OBJECT_TYPE_INSTANCE);
 }
 

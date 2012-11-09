@@ -43,9 +43,14 @@ char *GC_strdup_actual(const char *str)
 
 void *GC_realloc_actual(void *ptr, size_t size)
 {
-    Header *H = ((Header *) ptr) - 1;
-    H = realloc(H, size);
-    return H + 1;
+    if (ptr)
+    {
+        Header *H = ((Header *) ptr) - 1;
+        H = realloc(H, size);
+        return H + 1;
+    }
+    /* If ptr == NULL */
+    return GC_malloc_actual(size);
 }
 
 void GC_ref(void *ptr)

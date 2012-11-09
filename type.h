@@ -4,6 +4,12 @@
 
 #include "dict.h"
 
+enum mtype
+{
+    DYNAMIC_MEMBER = 0,
+    STATIC_MEMBER = 1
+};
+
 struct method;
 struct object;
 
@@ -12,26 +18,16 @@ struct class_t
 {
     /* The class it inherits from */
     struct class_t      *parent;
-    /* Dictionaries containing pointers to struct class_members */
-    struct dict         *dynamic_members;
-    struct dict         *static_members;
-    struct object       *static_value;
-    unsigned int        num_static_vals, num_dynamic_vals;
-    unsigned int        max_index;
-};
-
-struct class_member
-{
-    struct object       *val;
-    /* If this class is a member of another class, what index is it
-     * referred to by at run time? */
-    unsigned int        index;
+    /* Dictionaries containing pointers to struct class_members.
+     * members[DYNAMIC_MEMBER] and members[STATIC_MEMBER] */
+    struct dict         *members[2];
 };
 
 struct instance
 {
     struct class_t      *type;
-    struct object       **members;
+    /* List of dynamic members */
+    struct dict         *members;
 };
 
 enum object_type
@@ -59,8 +55,7 @@ struct object
 
 struct class_t *class_new(struct class_t *);
 void class_print(struct class_t *);
-void class_add_static_member(struct class_t *, char *, struct object *);
-void class_add_dynamic_member(struct class_t *, char *, struct object *);
+void class_add_member(struct class_t *, enum mtype, char *, struct object *);
 
 struct object *object_new(void);
 struct object *object_with_data(void);
@@ -68,6 +63,9 @@ struct object *object_from_class(struct class_t *);
 struct object *object_from_method(struct method *);
 
 struct object *new_instance(struct class_t *);
+
+struct object *get_member(struct object *, enum mtype, char *);
+void set_member(struct object *, enum mtype, char *, struct object *);
 
 #endif
 

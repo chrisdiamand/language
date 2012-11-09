@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "dict.h"
+#include "gc.h"
 
 #define N_BUCKETS_POWER 2
 #define N_BUCKETS (1 << N_BUCKETS_POWER)
@@ -33,10 +34,11 @@ struct dict
 static void insert_at_pos(struct sorted_list *L, struct keyvalue kv, int pos)
 {
     int i;
+
     if (L->len >= L->size) /* >= as len is going to increase by one */
     {
         L->size += 4; /* Leave a bit of room */
-        L->list = realloc(L->list, L->size * sizeof(struct keyvalue));
+        L->list = GC_realloc(L->list, L->size * sizeof(struct keyvalue));
         assert(L->list);
     }
 
@@ -94,7 +96,30 @@ static int search(struct sorted_list *L, char *key)
 
 struct dict *dict_new(void)
 {
-    return calloc(1, sizeof(struct dict));
+    return GC_malloc(sizeof(struct dict));
+}
+
+static void copy_sorted_list(struct sorted_list *dest, struct sorted_list *src)
+{
+    printf("***COPY***\n");
+    dest->size = dest->len = src->len;
+    dest->list = GC_malloc(sizeof(struct keyvalue) * dest->len);
+
+    memcpy(dest->list, src->list, sizeof(struct keyvalue) * dest->len);
+}
+
+/* Copy the elements into a new dictionary */
+struct dict *dict_copy(struct dict *D)
+{
+    int i;
+    struct dict *ret = dict_new();
+    for (i = 0; i < N_BUCKETS; i++)
+    {
+        struct sorted_list *src = D->tbl + i;
+        struct sorted_list *dst = ret->tbl + i;
+        copy_sorted_list(dst, src);
+    }
+    return ret;
 }
 
 void dict_set(struct dict *D, char *key, dict_value val)
