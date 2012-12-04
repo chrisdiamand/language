@@ -33,7 +33,8 @@ char *scanner_token_name(enum scanner_type t)
         case TOK_MUL:               return "\'*\'";
         case TOK_DIV:               return "\'/\'";
 
-        case TOK_PRINT:             return "\'print\'";
+        case TOK_CLASS:             return "\'class\'";
+        case TOK_FUNCTION:          return "\'function\'";
         case TOK_RETURN:            return "\'return\'";
         case TOK_DOT:               return "dot \'.\'";
         case TOK_COMMA:             return "\',\'";
@@ -193,8 +194,9 @@ struct scanner_token scan_next(struct scanner_input *I)
             }
             name[i] = 0;
             put_back(I, c);
-            if      ( strcmp(name, "var") == 0 )        {   T.type = TOK_VAR;       }
-            else if ( strcmp(name, "print") == 0 )      {   T.type = TOK_PRINT;     }
+            if      ( strcmp(name, "class") == 0 )      {   T.type = TOK_CLASS;     }
+            else if ( strcmp(name, "function") == 0 )   {   T.type = TOK_FUNCTION;  }
+            else if ( strcmp(name, "var") == 0 )        {   T.type = TOK_VAR;       }
             else if ( strcmp(name, "return") == 0 )     {   T.type = TOK_RETURN;    }
             else
             {

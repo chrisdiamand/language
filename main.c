@@ -33,7 +33,7 @@ int main(int argc, char **argv)
     class_print(main_namespace);
 
     C = compiler_new(I);
-    compile(C);
+    compile(C, main_namespace);
 
     return 0;
 }

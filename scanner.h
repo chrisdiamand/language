@@ -18,20 +18,21 @@ enum scanner_type
     TOK_DECIMAL,
     TOK_STRING,
 
-    TOK_ASSIGN,
+    TOK_ASSIGN,         /* = */
 
-    TOK_ISEQUAL,
+    TOK_ISEQUAL,        /* == */
 
-    TOK_ADD,
-    TOK_SUB,
-    TOK_MUL,
-    TOK_DIV,
+    TOK_ADD,            /* + */
+    TOK_SUB,            /* - */
+    TOK_MUL,            /* * */
+    TOK_DIV,            /* / */
 
-    TOK_PRINT,
-    TOK_VAR,
-    TOK_RETURN,
-    TOK_DOT,
-    TOK_COMMA,
+    TOK_CLASS,          /* 'class' */
+    TOK_FUNCTION,       /* 'function' */
+    TOK_VAR,            /* 'var' */
+    TOK_RETURN,         /* 'return' */
+    TOK_DOT,            /* . */
+    TOK_COMMA,          /* , */
     TOK_EOF
 };
 

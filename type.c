@@ -30,7 +30,7 @@ void class_add_member(struct class_t *C, enum mtype sd, char *name, struct objec
 void class_print(struct class_t *S)
 {
     printf("Scope %p: parent = %p\n", (void *) S, (void *) S->parent);
-    printf("Members:");
+    printf("Members:\n");
     if (S->members[STATIC_MEMBER])
         dict_print(S->members[STATIC_MEMBER], NULL);
 
