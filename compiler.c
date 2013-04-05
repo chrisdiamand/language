@@ -2,10 +2,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "class.h"
 #include "compiler.h"
 #include "gc.h"
 #include "scanner.h"
 #include "stack.h"
+#include "state.h"
 
 struct compiler
 {
@@ -22,21 +24,27 @@ static struct scanner_token next_token()
     return C->ct;
 }
 
-struct compiler *compiler_new(struct scanner_input *in)
+static void expect(enum scanner_type tok)
 {
-    struct compiler *C = GC_malloc(sizeof(struct compiler));
-    C->input = in;
-    C->scope = stack_new();
-    return C;
+    if (C->ct.type != tok)
+    {
+        fprintf(stderr, "Syntax error: Expected %s, got %s\n",
+                scanner_token_name(tok),
+                scanner_token_name(C->ct.type));
+        exit(1);
+    }
+    next_token();
 }
 
 static struct object *class_declaration(void)
 {
+    expect(TOK_CLASS);
     return NULL;
 }
 
 static struct object *function_declaration(void)
 {
+    expect(TOK_FUNCTION);
     return NULL;
 }
 
@@ -58,9 +66,13 @@ static void declaration_list(void)
     }
 }
 
-void compile(struct compiler *comp_state, struct class_t *main)
+struct object *compile(struct state *S, struct scanner_input *in)
 {
-    C = comp_state;
+    C = GC_malloc(sizeof(struct compiler));
+    C->input = in;
+
+    struct object *ret = class_new(S->class_object);
+
     next_token();
     declaration_list();
 }

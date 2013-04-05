@@ -1,5 +1,14 @@
 
-OBJ=builtin_types.o compiler.o dict.o gc.o main.o method.o scanner.o stack.o type.o
+OBJ=builtin_types.o \
+    class.o 		\
+    compiler.o      \
+    dict.o          \
+    gc.o            \
+    main.o          \
+    method.o        \
+	object.o        \
+    scanner.o       \
+    stack.o
 OUT=lang
 LIBS=
 CC=gcc

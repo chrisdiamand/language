@@ -1,0 +1,14 @@
+
+'int i;
+
+lib.string: x, y;
+
+int();
+list(int) i;
+
+function(int, list(string)) main =
+{
+    print("Hi!\n");
+}
+
+

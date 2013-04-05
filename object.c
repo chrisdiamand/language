@@ -4,20 +4,10 @@
 #include <stdlib.h>
 
 #include "gc.h"
-#include "type.h"
+#include "object.h"
 
-struct class_t *class_new(struct class_t *parent)
-{
-    struct class_t *ret = GC_malloc(sizeof(struct class_t));
-
-    ret->parent = parent;
-    ret->members[DYNAMIC_MEMBER] = NULL;
-    ret->members[STATIC_MEMBER] = NULL;
-
-    return ret;
-}
-
-void class_add_member(struct class_t *C, enum mtype sd, char *name, struct object *value)
+#if 0
+void class_add_member(struct class_t *C, enum membertype sd, char *name, struct object *value)
 {
     assert(sd == DYNAMIC_MEMBER || sd == STATIC_MEMBER);
 
@@ -26,6 +16,7 @@ void class_add_member(struct class_t *C, enum mtype sd, char *name, struct objec
 
     dict_set(C->members[sd], name, value);
 }
+#endif
 
 void class_print(struct class_t *S)
 {
@@ -42,22 +33,22 @@ struct object *object_new(void)
 {
     struct object *ret = GC_malloc(sizeof(struct object));
     ret->type = OBJECT_TYPE_NONE;
-    ret->v.inst = NULL;
+    ret->v.members = NULL;
     return ret;
 }
 
-struct object *object_from_class(struct class_t *C)
+struct object *object_from_class(struct compiler *S, struct class_t *cl)
 {
     struct object *O = object_new();
-    O->type = OBJECT_TYPE_CLASS;
-    O->v.cl = C;
+    O->type = S->class_class;
+    O->v.cl = cl;
     return O;
 }
 
-struct object *object_from_method(struct method *M)
+struct object *object_from_method(struct compiler *S, struct method *M)
 {
     struct object *O = object_new();
-    O->type = OBJECT_TYPE_METHOD;
+    O->type = S->class_method;
     O->v.method = M;
     return O;
 }
@@ -93,7 +84,7 @@ struct object *new_instance(struct class_t *C)
     return ret;
 }
 
-struct object *get_member(struct object *inst, enum mtype sd, char *name)
+struct object *get_member(struct object *inst, enum membertype sd, char *name)
 {
     struct instance *I = inst->v.inst;
     struct object *O = NULL;
@@ -116,7 +107,7 @@ struct object *get_member(struct object *inst, enum mtype sd, char *name)
     return NULL;
 }
 
-void set_member(struct object *O, enum mtype sd, char *name, struct object *val)
+void set_member(struct object *O, enum membertype sd, char *name, struct object *val)
 {
     assert(O->type == OBJECT_TYPE_INSTANCE);
 }
