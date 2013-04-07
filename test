@@ -1,14 +1,19 @@
+#!./lang
 
-'int i;
-
-lib.string: x, y;
-
-int();
-list(int) i;
-
-function(int, list(string)) main =
+class List<T>
 {
-    print("Hi!\n");
+    #T get(String name)
+    #{
+        # Do stuff
+    #}
 }
+
+#import somemodule;
+
+#Int main(List<String> args)
+#{
+#    somemodule.DataStructure x;
+#    print("Hi!\n");
+#}
 
 

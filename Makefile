@@ -1,24 +1,34 @@
+SRC = builtin_types.c \
+      class.c 		  \
+      compiler.c      \
+      dict.c          \
+      gc.c            \
+      main.c          \
+      method.c        \
+      object.c        \
+      run.c           \
+      scanner.c       \
+      stack.c         \
+      state.c
+OUT = lang
+BUILDDIR = Build
+LIBS =
+CC = clang
+CFLAGS = -Wall -g -pedantic -ansi
 
-OBJ=builtin_types.o \
-    class.o 		\
-    compiler.o      \
-    dict.o          \
-    gc.o            \
-    main.o          \
-    method.o        \
-	object.o        \
-    scanner.o       \
-    stack.o
-OUT=lang
-LIBS=
-CC=gcc
-CFLAGS=-Wall -g -pedantic -ansi
+OBJ = $(patsubst %.c,$(BUILDDIR)/%.o,$(SRC))
 
 all: $(OUT)
 
 $(OUT): $(OBJ)
 	$(CC) -o $(OUT) $(OBJ) $(LIBS)
 
+$(BUILDDIR):
+	mkdir $(BUILDDIR)
+
+$(BUILDDIR)/%.o: $(1)%.c $(BUILDDIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
 clean:
 	rm -f $(OUT) $(OBJ)
-
+	rmdir --ignore-fail-on-non-empty $(BUILDDIR)

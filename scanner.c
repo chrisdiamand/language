@@ -21,12 +21,17 @@ char *scanner_token_name(enum scanner_type t)
         case TOK_CLOSED_BRACKET:    return "\')\'";
         case TOK_STARTBLOCK:        return "\'{\'";
         case TOK_ENDBLOCK:          return "\'}\'";
-        case TOK_IDENTITY:          return "identity";
+        case TOK_IDENTIFIER:        return "identifier";
         case TOK_INT:               return "integer";
         case TOK_DECIMAL:           return "decimal";
         case TOK_STRING:            return "string";
         case TOK_ASSIGN:            return "assignment";
+
         case TOK_ISEQUAL:           return "\'==\'";
+        case TOK_LT:                return "\'<\'";
+        case TOK_LTE:               return "\'<=\'";
+        case TOK_GT:                return "\'>\'";
+        case TOK_GTE:               return "\'>=\'";
 
         case TOK_ADD:               return "\'+\'";
         case TOK_SUB:               return "\'-\'";
@@ -137,14 +142,9 @@ static void put_back(struct scanner_input *I, char c)
     if (c == '\n')
         I->line_number--;
     if (I->str != NULL)
-    {
-        I->pos =- 1;
-    }
+        I->pos--;
     else if (I->fp != NULL)
-    {
-        /* FIXME: This won't work with a buffer (see above, next_char() ) */
         ungetc(c, I->fp);
-    }
 }
 
 /* FIXME: Add escape sequences \n etc */
@@ -200,7 +200,7 @@ struct scanner_token scan_next(struct scanner_input *I)
             else if ( strcmp(name, "return") == 0 )     {   T.type = TOK_RETURN;    }
             else
             {
-                T.type = TOK_IDENTITY;
+                T.type = TOK_IDENTIFIER;
                 T.value = GC_strdup(name);
             }
             return T;
@@ -237,6 +237,26 @@ struct scanner_token scan_next(struct scanner_input *I)
             c = next_char(I);
             if (c == '=') /* It must be comparison: == */
                 T.type = TOK_ISEQUAL;
+            else
+                put_back(I, c);
+            return T;
+        }
+        if (c == '<')
+        {
+            T.type = TOK_LT;
+            c = next_char(I);
+            if (c == '=')
+                T.type = TOK_LTE;
+            else
+                put_back(I, c);
+            return T;
+        }
+        if (c == '>')
+        {
+            T.type = TOK_GT;
+            c = next_char(I);
+            if (c == '=')
+                T.type = TOK_GTE;
             else
                 put_back(I, c);
             return T;

@@ -4,6 +4,8 @@
 
 #include "class.h"
 #include "dict.h"
+#include "method.h"
+#include "state.h"
 
 typedef signed long builtin_int_t;
 
@@ -25,8 +27,12 @@ struct object *object_new(void);
 
 struct object *new_instance(struct class_t *);
 
-struct object *get_member(struct object *, enum membertype, char *);
+struct object *get_member(struct state *S, struct object *inst,
+                          enum membertype sd, char *name);
 void set_member(struct object *, enum membertype, char *, struct object *);
+
+struct object *object_from_class(struct state *, struct class_t *);
+struct object *object_from_method(struct state *, struct method *);
 
 #endif
 

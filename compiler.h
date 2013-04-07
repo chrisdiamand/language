@@ -5,7 +5,7 @@
 #include "scanner.h"
 #include "state.h"
 
-struct object *compile(struct state *S, struct scanner_input *in);
+void compile(struct state *, struct scanner_input *, struct class_t *);
 
 #endif
 

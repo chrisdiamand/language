@@ -3,52 +3,48 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "class.h"
 #include "method.h"
-#include "type.h"
+#include "object.h"
+#include "state.h"
 
-static struct class_t *int_class = NULL;
+static struct class_t *class_int = NULL;
 
-static struct object *integer_add(struct object **args)
+static struct object *integer_add(struct state *S, struct object **args)
 {
-    struct object *lobj = get_member(args[0], DYNAMIC_MEMBER, "raw_int_val");
-    struct object *robj = get_member(args[1], DYNAMIC_MEMBER, "raw_int_val");
+    struct object *lobj = args[0];
+    struct object *robj = args[1];
 
     signed long l = lobj->v.integer;
     signed long r = robj->v.integer;
 
-    struct object *ret = new_instance(int_class);
-    struct object *raw_int_val = object_with_data();
+    struct object *ret = new_instance(class_int);
     
-    assert(lobj->type == OBJECT_TYPE_RAW_DATA);
-    assert(robj->type == OBJECT_TYPE_RAW_DATA);
+    assert(lobj->type == class_int);
+    assert(robj->type == class_int);
 
     /* The actual addition */
-    raw_int_val->v.integer = l + r;
+    ret->v.integer = l + r;
 
-    set_member(ret, DYNAMIC_MEMBER, "raw_int_val", raw_int_val);
     return ret;
 }
 
-static void add_integer_class(struct class_t *namespace)
+static struct object *integer_class(struct state *S)
 {
     const char *two_op_types[] = {"integer", "integer", "integer", NULL};
-    struct class_t *C = class_new(NULL);
-    struct object *ret = object_from_class(C);
-
-    /* Add the 'integer' class to the namespace. This has to be
-     * done before the members are added as they will need to reference
-     * the class name in their type declarations. */
-    class_add_member(namespace, STATIC_MEMBER, "integer", ret);
+    struct object *C = class_new_obj(S, S->class_object);
 
     /* Actually create the class */
-    int_class = C;
+    class_int = C->v.cl;
 
-    class_add_member(C, STATIC_MEMBER, "+", method_from_C(integer_add, two_op_types));
-    class_add_member(C, DYNAMIC_MEMBER, "raw_int_val", object_with_data());
+    class_add_member(class_int, STATIC_MEMBER, "+", method_from_C(S, integer_add, two_op_types));
+
+    return C;
 }
 
-void register_builtin_types(struct class_t *namespace)
+void register_builtin_types(struct state *S, struct class_t *N)
 {
-    add_integer_class(namespace);
+    class_add_member(N, STATIC_MEMBER, "int", integer_class(S));
+    state_class_to_scope(S, "int", class_int);
 }
 

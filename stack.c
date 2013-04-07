@@ -43,6 +43,17 @@ stack_value stack_pop(struct stack *S)
     return S->st[--S->len];
 }
 
+stack_value stack_top(struct stack *S)
+{
+    if (S->len < 1)
+    {
+        fprintf(stderr, "Stack underflow: S = %p, len = %d, size = %d\n",
+                (void *) S, S->len, S->size);
+        exit(1);
+    }
+    return S->st[S->len - 1];
+}
+
 stack_value stack_get(struct stack *S, int pos)
 {
     if (pos >= S->len || pos < 0)

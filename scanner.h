@@ -1,4 +1,3 @@
-
 #ifndef SCANNER_H
 #define SCANNER_H
 
@@ -13,7 +12,7 @@ enum scanner_type
     TOK_STARTBLOCK,     /* { */
     TOK_ENDBLOCK,       /* } */
 
-    TOK_IDENTITY,
+    TOK_IDENTIFIER,
     TOK_INT,
     TOK_DECIMAL,
     TOK_STRING,
@@ -21,6 +20,10 @@ enum scanner_type
     TOK_ASSIGN,         /* = */
 
     TOK_ISEQUAL,        /* == */
+    TOK_LT,             /* < */
+    TOK_LTE,            /* <= */
+    TOK_GT,             /* > */
+    TOK_GTE,            /* >= */
 
     TOK_ADD,            /* + */
     TOK_SUB,            /* - */
@@ -59,4 +62,3 @@ struct scanner_input *scan_input_string(char *);
 struct scanner_token scan_next(struct scanner_input *);
 
 #endif
-

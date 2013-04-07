@@ -1,6 +1,8 @@
 #ifndef CLASS_H
 #define CLASS_H
 
+#include "state.h"
+
 enum membertype
 {
     DYNAMIC_MEMBER = 0,
@@ -15,11 +17,17 @@ struct class_t
     /* Dictionaries containing pointers to struct class_members.
      * members[DYNAMIC_MEMBER] and members[STATIC_MEMBER] */
     struct dict         *members[2];
+
+    /* Names of types for templates */
+    int ntypenames;
+    char **typenames;
 };
 
-struct object *class_new(struct class_t *);
-void class_print(struct object *);
-void class_add_member(struct object *, enum membertype, char *, struct object *);
+struct class_t *class_new(struct class_t *);
+struct object *class_new_obj(struct state *, struct class_t *);
+struct class_t *class_get(struct state *, struct object *);
+void class_print(struct state *, struct class_t *);
+void class_add_member(struct class_t *, enum membertype, char *, struct object *);
 
 
 #endif

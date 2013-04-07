@@ -10,6 +10,13 @@ struct state
     /* Primitives */
     struct class_t          *class_int;
     struct class_t          *class_double;
+
+    /* Stack of dictionaries of classes to know which classes
+     * are visible in the current scope */
+    struct stack            *typescope;
 };
+
+struct state *state_new(void);
+void state_class_to_scope(struct state *, char *, struct class_t *);
 
 #endif
