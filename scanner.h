@@ -36,6 +36,7 @@ enum scanner_type
     TOK_RETURN,         /* 'return' */
     TOK_DOT,            /* . */
     TOK_COMMA,          /* , */
+    TOK_SEMICOLON,      /* ; */
     TOK_EOF
 };
 

@@ -40,7 +40,7 @@ static int expect(enum scanner_type tok)
 {
     if (C->ct.type != tok)
     {
-        syntaxerror("Expected %s, got %s\n",
+        syntaxerror("Expected %s, got %s",
                     scanner_token_name(tok),
                     scanner_token_name(C->ct.type));
         next_token();
@@ -84,8 +84,6 @@ static void class_declaration(struct class_t *namespace)
     classname = C->ct.value;
     expect(TOK_IDENTIFIER);
 
-    printf("ID %s\n", classname);
-
     /* Add it to the scope */
     state_class_to_scope(C->S, classname, cl);
     /* And the namespace/outer class */
@@ -120,17 +118,19 @@ static struct object *function_declaration(struct class_t *namespace)
  * and add them to namespace/class N */
 static void class_body(struct class_t *N, enum scanner_type finish)
 {
-    static int errorcount = 0;
+    int errorcount = 0;
 
-    while (C->ct.type != finish)
+    while (C->ct.type != finish && C->ct.type != TOK_EOF)
     {
         switch (C->ct.type)
         {
             case TOK_CLASS:
                 class_declaration(N);
+                errorcount = 0;
                 break;
             case TOK_FUNCTION:
                 function_declaration(N); 
+                errorcount = 0;
                 break;
             default:
                 if (errorcount++ == 0)

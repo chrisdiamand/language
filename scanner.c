@@ -1,5 +1,3 @@
-
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -43,6 +41,7 @@ char *scanner_token_name(enum scanner_type t)
         case TOK_RETURN:            return "\'return\'";
         case TOK_DOT:               return "dot \'.\'";
         case TOK_COMMA:             return "\',\'";
+        case TOK_SEMICOLON:         return "\';\'";
         case TOK_VAR:               return "\'var\'";
         case TOK_EOF:               return "EOF";
     }
@@ -64,6 +63,7 @@ struct scanner_input *scan_input_file(FILE *fp)
     i->filename = "<unknown>";
     i->str = NULL;
     i->pos = 0;
+    i->line_number = 1;
     return i;
 }
 
@@ -83,6 +83,7 @@ struct scanner_input *scan_input_filename(char *fname)
     i->filename = GC_strdup(fname);
     i->str = NULL;
     i->pos = 0;
+    i->line_number = 1;
     return i;
 }
 
@@ -97,6 +98,7 @@ struct scanner_input *scan_input_string(char *s)
     i->str = s;
     i->pos = 0;
     i->fp = NULL;
+    i->line_number = 1;
     return i;
 }
 
@@ -176,7 +178,7 @@ static char *read_quoted_string(struct scanner_input *I)
 struct scanner_token scan_next(struct scanner_input *I)
 {
     char c = 1;
-    int i; 
+    int i, num_invalid_chars = 0; 
     struct scanner_token T;
     while (c != 0)
     {
@@ -273,8 +275,11 @@ struct scanner_token scan_next(struct scanner_input *I)
             while (c != '\n')
                 c = next_char(I);
         }
+        if (isspace(c)) /* Ignore whitespace */
+            continue;
         switch (c)
         {
+            case   0:   T.type = TOK_EOF;           return T;
             case '.':   T.type = TOK_DOT;           return T;
             case '+':   T.type = TOK_ADD;           return T;
             case '-':   T.type = TOK_SUB;           return T;
@@ -285,9 +290,16 @@ struct scanner_token scan_next(struct scanner_input *I)
             case '{':   T.type = TOK_STARTBLOCK;    return T;
             case '}':   T.type = TOK_ENDBLOCK;      return T;
             case ',':   T.type = TOK_COMMA;         return T;
-            default:    break;
+            case ';':   T.type = TOK_SEMICOLON;     return T;
+            default:
+                if (num_invalid_chars++ < 1)
+                    fprintf(stderr,
+                            "Syntax error, line %lu: Invalid character \'%c\' (%d)\n",
+                            I->line_number, c, c);
+                break;
         }
     }
+    printf("EOF\n");
     T.type = TOK_EOF;
     return T;
 }

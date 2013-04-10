@@ -14,7 +14,7 @@ OUT = lang
 BUILDDIR = Build
 LIBS =
 CC = clang
-CFLAGS = -Wall -g -pedantic -ansi
+CFLAGS = -Wall -g -pedantic -ansi -O0
 
 OBJ = $(patsubst %.c,$(BUILDDIR)/%.o,$(SRC))
 
