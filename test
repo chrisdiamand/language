@@ -1,19 +1,28 @@
 #!./lang
 
+class SomethingElse;
+
 class List<T>
-{
-    #T get(String name)
-    #{
+
+    T get(String name)
         # Do stuff
-    #}
+    end
+
+    SomethingElse forward;
+end
+
+class SomethingElse
+{
+    # bla bla
+    List<Int> backward;
 }
 
 #import somemodule;
 
-#Int main(List<String> args)
-#{
-#    somemodule.DataStructure x;
-#    print("Hi!\n");
-#}
+Int x;
 
-
+Int main(List<String> args)
+{
+    Int.dosomething();
+    somemodule.DataStructure x;
+}

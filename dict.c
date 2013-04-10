@@ -168,6 +168,8 @@ void dict_print(struct dict *D, dict_print_function_t printfunc)
             printf("\'%s\':", L->list[j].key);
             if (printfunc)
                 printfunc(L->list[j].value);
+            else
+                printf("%p", (void *)(L->list[j].value));
             if (j < L->len - 1)
                 printf(", ");
         }
