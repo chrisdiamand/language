@@ -12,10 +12,11 @@ enum scanner_type
     //TOK_STARTBLOCK,     /* { */
     //TOK_ENDBLOCK,       /* } */
 
-    TOK_IDENTIFIER,
-    TOK_INT,
-    TOK_DECIMAL,
-    TOK_STRING,
+    TOK_IDENTIFIER,     /* [a-z|A-Z|_]+ */
+    TOK_CLASSNAME,      /* Identifier recognised as a class name */
+    TOK_INT,            /* 234 */
+    TOK_DECIMAL,        /* 3.141 */
+    TOK_STRING,         /* "words" */
 
     TOK_ASSIGN,         /* = */
 
@@ -32,9 +33,7 @@ enum scanner_type
 
     TOK_CLASS,          /* 'class' */
     TOK_END,            /* 'end' */
-    TOK_FUNCTION,       /* 'function' */
     TOK_RETURN,         /* 'return' */
-    TOK_VAR,            /* 'var' */
     TOK_DOT,            /* . */
     TOK_COMMA,          /* , */
     TOK_SEMICOLON,      /* ; */

@@ -32,7 +32,7 @@ static struct object *integer_add(struct state *S, struct object **args)
 static struct type_t *integer_class(struct state *S)
 {
     /* Actually create the class */
-    class_int = class_new(S->class_object);
+    class_int = class_new("int", S->class_object);
 
     class_add_member(class_int, STATIC_MEMBER, "_add_",
                      method_from_C(S, integer_add, "int _add_(int a)"));

@@ -25,7 +25,7 @@ int main(int argc, char **argv)
 {
     struct scanner_token *in = NULL;
     struct state *S = state_new();
-    struct class_t *main_namespace = class_new(NULL);
+    struct class_t *main_namespace = class_new("__main__", NULL);
 
     if (argc > 1)
         in = scan_filename(argv[1]);

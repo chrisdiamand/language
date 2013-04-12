@@ -29,6 +29,7 @@ char *scanner_token_name(enum scanner_type t)
         //case TOK_STARTBLOCK:        return "\'{\'";
         //case TOK_ENDBLOCK:          return "\'}\'";
         case TOK_IDENTIFIER:        return "identifier";
+        case TOK_CLASSNAME:         return "classname";
         case TOK_INT:               return "integer";
         case TOK_DECIMAL:           return "decimal";
         case TOK_STRING:            return "string";
@@ -47,9 +48,7 @@ char *scanner_token_name(enum scanner_type t)
 
         case TOK_CLASS:             return "\'class\'";
         case TOK_END:               return "\'end\'";
-        case TOK_FUNCTION:          return "\'function\'";
         case TOK_RETURN:            return "\'return\'";
-        case TOK_VAR:               return "\'var\'";
         case TOK_DOT:               return "\'.\'";
         case TOK_COMMA:             return "\',\'";
         case TOK_SEMICOLON:         return "\';\'";
@@ -157,9 +156,7 @@ static struct scanner_token scan_next(struct scanner_input *I)
             put_back(I, c);
             if      ( strcmp(name, "class")     == 0 )  {   T.type = TOK_CLASS;     }
             else if ( strcmp(name, "end")       == 0 )  {   T.type = TOK_END;       }
-            else if ( strcmp(name, "function")  == 0 )  {   T.type = TOK_FUNCTION;  }
             else if ( strcmp(name, "return")    == 0 )  {   T.type = TOK_RETURN;    }
-            else if ( strcmp(name, "var")       == 0 )  {   T.type = TOK_VAR;       }
             else
             {
                 T.type = TOK_IDENTIFIER;
@@ -286,7 +283,6 @@ static struct scanner_token *scan(struct scanner_input *I, unsigned int *n)
         *n = (unsigned int) count;
 
     // Shrink it down to the right size
-    printf("%lu tokens, %lu bytes\n", count, count * sizeof(struct scanner_token));
     ret = GC_realloc(ret, count * sizeof(struct scanner_token));
     return ret;
 }

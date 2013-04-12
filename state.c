@@ -29,9 +29,9 @@ struct state *state_new(void)
 
     S->typescope = stack_new();
 
-    S->class_object = class_new(NULL);
-    S->class_class = class_new(S->class_object);
-    S->class_method = class_new(S->class_object);
+    S->class_object = class_new("Object", NULL);
+    S->class_class = class_new("Class", S->class_object);
+    S->class_method = class_new("Method", S->class_object);
 
     return S;
 }

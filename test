@@ -1,9 +1,9 @@
 #!./lang
 
-class List<T> end
-class String end
+class List<C> end
 
-int x;
+int x, y, z;
+List<int> vector;
 
-Int main(List<String> args)
+int main()
 end

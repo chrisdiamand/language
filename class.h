@@ -12,6 +12,7 @@ enum membertype
 /* The compiler's representation of a class */
 struct class_t
 {
+    char *name;
     /* The class it inherits from */
     struct class_t      *parent;
     /* Dictionaries containing pointers to struct class_members.
@@ -23,9 +24,7 @@ struct class_t
     char **paramnames;
 };
 
-struct class_t *class_new(struct class_t *);
-struct object *class_new_obj(struct state *, struct class_t *);
-struct class_t *class_from_object(struct state *, struct object *);
+struct class_t *class_new(char *, struct class_t *);
 struct class_t *class_from_type(struct state *, struct type_t *);
 void class_print(struct state *, struct class_t *);
 void class_add_member(struct class_t *, enum membertype, char *, struct type_t *);

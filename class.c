@@ -26,10 +26,11 @@ struct class_t *class_from_type(struct state *S, struct type_t *T)
 }
 
 /* Create a new class inheriting from parent */
-struct class_t *class_new(struct class_t *parent)
+struct class_t *class_new(char *name, struct class_t *parent)
 {
     struct class_t *cl = GC_malloc(sizeof(struct class_t));
 
+    cl->name = name;
     cl->parent = parent;
     cl->members[DYNAMIC_MEMBER] = NULL;
     cl->members[STATIC_MEMBER] = NULL;
@@ -37,16 +38,6 @@ struct class_t *class_new(struct class_t *parent)
     cl->paramnames = NULL;
 
     return cl;
-}
-
-struct object *class_new_obj(struct state *S, struct class_t *parent)
-{
-    struct object *ret = object_new();
-
-    ret->type = type_from_class(S, S->class_class);
-    ret->v.cl = class_new(parent);
-
-    return ret;
 }
 
 void class_print(struct state *S, struct class_t *C)
@@ -80,8 +71,10 @@ struct type_t *class_get_static_member(struct class_t *C, char *name)
             ret = NULL;
         else
             ret = (struct type_t *) dict_get(C->members[STATIC_MEMBER], name);
+
         if (ret)
             return ret;
+
         C = C->parent;
     }
     return NULL;

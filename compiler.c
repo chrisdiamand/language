@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,6 +19,7 @@ struct compiler
     struct scanner_token    *tokens;
     unsigned int            tokenpos;
     struct state            *S;
+    struct type_t           *lookeduptype;
 };
 
 static struct compiler *C = NULL;
@@ -28,6 +30,19 @@ static struct scanner_token next_token()
     ct = C->tokens[C->tokenpos];
     if (ct.type != TOK_EOF)
         C->tokenpos++;
+
+    /* Look through the scopes to see if it's the name of a class */
+    C->lookeduptype = NULL;
+    if (ct.type == TOK_IDENTIFIER && ct.value)
+    {
+        C->lookeduptype = state_lookup_global(C->S, ct.value);
+        if (C->lookeduptype)
+        {
+            if (C->lookeduptype->cl == C->S->class_class) // It's a class name
+                ct.type = TOK_CLASSNAME;
+        }
+    }
+
     return ct;
 }
 
@@ -41,13 +56,21 @@ static void syntaxerror(char *fmt, ...)
     fflush(stderr);
 }
 
+static void expectederror(char *expected)
+{
+    if (ct.type == TOK_IDENTIFIER)
+        syntaxerror("Expected %s, got %s \'%s\'",
+                    expected, scanner_token_name(ct.type), ct.value);
+    else
+        syntaxerror("Expected %s, got %s",
+                    expected, scanner_token_name(ct.type));
+}
+
 static int expect(enum scanner_type tok)
 {
     if (ct.type != tok)
     {
-        syntaxerror("Expected %s, got %s",
-                    scanner_token_name(tok),
-                    scanner_token_name(ct.type));
+        expectederror(scanner_token_name(tok));
         next_token();
         return 0;
     }
@@ -68,7 +91,9 @@ static void class_typename_list(struct class_t *cl)
             break;
         expect(TOK_COMMA);
     }
-    cl->nparams = i;
+    // i isn't incremented at the end of the for loop as it terminates
+    // because of 'break;', not the loop condition. Increase it here:
+    cl->nparams = i + 1;
     cl->paramnames = GC_malloc(sizeof(char *) * cl->nparams);
     memcpy(cl->paramnames, typenames, sizeof(char *) * cl->nparams);
 }
@@ -80,11 +105,12 @@ static void class_declaration(struct class_t *namespace)
 {
     char *classname = NULL;
     /* FIXME: Inheritance syntax */
-    struct class_t *cl = class_new(C->S->class_object);
-
+    struct class_t *cl = NULL;
     expect(TOK_CLASS);
     classname = ct.value;
     expect(TOK_IDENTIFIER);
+
+    cl = class_new(classname, C->S->class_object);
 
     /* Add to the namespace/outer class so it can reference itself */
     class_add_member(namespace, STATIC_MEMBER, classname,
@@ -109,22 +135,12 @@ static void class_declaration(struct class_t *namespace)
 static struct type_t *type_specifier(void)
 {
     char *typename = ct.value;
-    struct class_t *cl;
+    struct class_t *cl = NULL;
     struct type_t *ret = NULL, *class_type;
-    expect(TOK_IDENTIFIER);
-    class_type = state_lookup_global(C->S, typename);
-
-    if (!class_type)
-    {
-        fprintf(stderr, "No such type %s\n", typename);
-        return NULL;
-    }
-    if (class_type->cl != C->S->class_class)
-    {
-        fprintf(stderr, "\'%s\' used in declaration but isn't of type \'class\'\n",
-                typename);
-        return NULL;
-    }
+    class_type = C->lookeduptype;
+    expect(TOK_CLASSNAME);
+    cl = class_from_type(C->S, class_type);
+    assert(cl);
 
     /* Allow inner classes e.g. 'module.SomeType x;' */
     while (ct.type == TOK_DOT)
@@ -163,13 +179,45 @@ static struct type_t *type_specifier(void)
     return ret;
 }
 
+static void method_definition(struct class_t *namespace,
+                              struct type_t *return_type,
+                              char *methodname)
+{
+    expect(TOK_OPEN_BRACKET);
+    expect(TOK_CLOSED_BRACKET);
+    expect(TOK_END);
+}
+
 /* Parse a function/variable declaration. If it is syntactically
  * correct, add it to namespace, otherwise return false. */
 static void function_or_variable_declaration(struct class_t *namespace)
 {
+    char *varname;
     struct type_t *type = type_specifier();
     if (!type)
         return;
+
+    varname = ct.value;
+    if (!expect(TOK_IDENTIFIER))
+        return;
+
+    if (ct.type == TOK_OPEN_BRACKET)
+    {
+        method_definition(namespace, type, varname);
+        return;
+    }
+
+    /* Add a list of identifiers to the namespace */
+    class_add_member(namespace, DYNAMIC_MEMBER, varname, type);
+    while (ct.type == TOK_COMMA)
+    {
+        expect(TOK_COMMA);
+        varname = ct.value;
+        if (!expect(TOK_IDENTIFIER))
+            break;
+        class_add_member(namespace, DYNAMIC_MEMBER, varname, type);
+    }
+    expect(TOK_SEMICOLON);
 }
 
 /* Parse a list of declarations (variables, methods and classes)
@@ -180,26 +228,24 @@ static void class_body(struct class_t *N, enum scanner_type finish)
 
     while (ct.type != finish && ct.type != TOK_EOF)
     {
-        if (ct.type == TOK_CLASS)
+        switch (ct.type)
         {
-            class_declaration(N);
-            errorcount = 0;
-        }
-        else if (ct.type == TOK_IDENTIFIER)
-        {
-            function_or_variable_declaration(N);
-            errorcount = 0;
-        }
-        else if (ct.type == TOK_SEMICOLON)
-        {
-            expect(TOK_SEMICOLON);
-        }
-        else
-        {
-            if (errorcount++ == 0)
-                syntaxerror("Expected declaration, got %s",
-                            scanner_token_name(ct.type));
-            next_token();
+            case TOK_CLASS:
+                class_declaration(N);
+                errorcount = 0;
+                break;
+            case TOK_CLASSNAME:
+                function_or_variable_declaration(N);
+                errorcount = 0;
+                break;
+            case TOK_SEMICOLON:
+                expect(TOK_SEMICOLON);
+                break;
+            default:
+                if (errorcount++ == 0)
+                    expectederror("declaration");
+                next_token();
+                break;
         }
     }
 }

@@ -1,4 +1,3 @@
-
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,7 +38,7 @@ static void insert_at_pos(struct sorted_list *L, struct keyvalue kv, int pos)
     {
         L->size += 4; /* Leave a bit of room */
         L->list = GC_realloc(L->list, L->size * sizeof(struct keyvalue));
-        assert(L->list);
+        assert(L->list != NULL);
     }
 
     /* Move everything up one position */
@@ -53,6 +52,7 @@ static void insert_at_pos(struct sorted_list *L, struct keyvalue kv, int pos)
 static unsigned int hash(char *key)
 {
     unsigned int n = 0;
+    assert(key != NULL);
     while (*key)
         n += *(key++);
 
@@ -142,7 +142,7 @@ void dict_set(struct dict *D, char *key, dict_value val)
     insert_at_pos(L, kv, list_pos);
 }
 
-dict_value *dict_get(struct dict *D, char *key)
+dict_value dict_get(struct dict *D, char *key)
 {
     unsigned int bucket = hash(key);
     struct sorted_list *L = D->tbl + bucket;
@@ -151,7 +151,7 @@ dict_value *dict_get(struct dict *D, char *key)
     if (L->list && L->size > 0 && pos < L->len)
     {
         if ( !strcmp(L->list[pos].key, key) )
-            return &(L->list[pos].value);
+            return L->list[pos].value;
     }
     return NULL;
 }
