@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "class.h"
@@ -23,8 +24,8 @@ struct class_t *class_new(struct class_t *parent)
     cl->parent = parent;
     cl->members[DYNAMIC_MEMBER] = NULL;
     cl->members[STATIC_MEMBER] = NULL;
-    cl->ntypenames = 0;
-    cl->typenames = NULL;
+    cl->nparams = 0;
+    cl->paramnames = NULL;
 
     return cl;
 }
@@ -58,5 +59,21 @@ void class_add_member(struct class_t *C, enum membertype sd, char *name, struct 
     if (!C->members[sd])
         C->members[sd] = dict_new();
 
-    dict_set(C->members[sd], name, value);
+    dict_set(C->members[sd], name, (void *) value);
+}
+
+struct object *class_get_static_member(struct class_t *C, char *name)
+{
+    while (C)
+    {
+        struct object *ret;
+        if (!C->members[STATIC_MEMBER])
+            ret = NULL;
+        else
+            ret = (struct object *) dict_get(C->members[STATIC_MEMBER], name);
+        if (ret)
+            return ret;
+        C = C->parent;
+    }
+    return NULL;
 }

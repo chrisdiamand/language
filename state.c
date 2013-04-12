@@ -14,6 +14,19 @@ void state_class_to_scope(struct state *S, char *name, struct class_t *cl)
     dict_set(scope, name, cl);
 }
 
+struct class_t *state_find_class(struct state *S, char *name)
+{
+    int i;
+    for (i = stack_len(S->typescope) - 1; i >= 0; i--)
+    {
+        struct dict *scope = stack_get(S->typescope, i);
+        struct class_t *cl = (struct class_t *) dict_get(scope, name);
+        if (cl)
+            return cl;
+    }
+    return NULL;
+}
+
 struct state *state_new(void)
 {
     struct state *S = GC_malloc(sizeof(struct state));

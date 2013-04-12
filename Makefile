@@ -9,12 +9,13 @@ SRC = builtin_types.c \
       run.c           \
       scanner.c       \
       stack.c         \
-      state.c
+      state.c         \
+      type.c
 OUT = lang
 BUILDDIR = Build
 LIBS =
 CC = clang
-CFLAGS = -Wall -g -pedantic -ansi -O0
+CFLAGS = -Wall -g -pedantic -std=c99 -O0
 
 OBJ = $(patsubst %.c,$(BUILDDIR)/%.o,$(SRC))
 
@@ -26,7 +27,7 @@ $(OUT): $(OBJ)
 $(BUILDDIR):
 	mkdir $(BUILDDIR)
 
-$(BUILDDIR)/%.o: $(1)%.c $(BUILDDIR)
+$(BUILDDIR)/%.o: $(1)%.c $(INCLUDES) $(BUILDDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:

@@ -47,7 +47,6 @@ static void insert_at_pos(struct sorted_list *L, struct keyvalue kv, int pos)
         L->list[i + 1] = L->list[i];
 
     L->list[pos] = kv;
-
     L->len++;
 }
 
@@ -96,6 +95,7 @@ static int search(struct sorted_list *L, char *key)
 
 struct dict *dict_new(void)
 {
+    /* Assume the memory is cleared */
     return GC_malloc(sizeof(struct dict));
 }
 

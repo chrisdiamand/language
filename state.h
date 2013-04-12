@@ -18,5 +18,6 @@ struct state
 
 struct state *state_new(void);
 void state_class_to_scope(struct state *, char *, struct class_t *);
+struct class_t *state_find_class(struct state *, char *);
 
 #endif

@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -8,6 +9,14 @@ void die(const char *, ...);
 #include "gc.h"
 #include "scanner.h"
 
+struct scanner_input
+{
+    FILE *fp;
+    char *filename;
+    char *str;
+    unsigned long int pos, line_number;
+};
+
 /* This could be done with a table but it's not really worth bothering */
 char *scanner_token_name(enum scanner_type t)
 {
@@ -17,8 +26,8 @@ char *scanner_token_name(enum scanner_type t)
         case TOK_NULL:              return "null";
         case TOK_OPEN_BRACKET:      return "\'(\'";
         case TOK_CLOSED_BRACKET:    return "\')\'";
-        case TOK_STARTBLOCK:        return "\'{\'";
-        case TOK_ENDBLOCK:          return "\'}\'";
+        //case TOK_STARTBLOCK:        return "\'{\'";
+        //case TOK_ENDBLOCK:          return "\'}\'";
         case TOK_IDENTIFIER:        return "identifier";
         case TOK_INT:               return "integer";
         case TOK_DECIMAL:           return "decimal";
@@ -37,69 +46,16 @@ char *scanner_token_name(enum scanner_type t)
         case TOK_DIV:               return "\'/\'";
 
         case TOK_CLASS:             return "\'class\'";
+        case TOK_END:               return "\'end\'";
         case TOK_FUNCTION:          return "\'function\'";
         case TOK_RETURN:            return "\'return\'";
-        case TOK_DOT:               return "dot \'.\'";
+        case TOK_VAR:               return "\'var\'";
+        case TOK_DOT:               return "\'.\'";
         case TOK_COMMA:             return "\',\'";
         case TOK_SEMICOLON:         return "\';\'";
-        case TOK_VAR:               return "\'var\'";
         case TOK_EOF:               return "EOF";
     }
     return "<?>";
-}
-
-/* Return an input source that reads from a file */
-struct scanner_input *scan_input_file(FILE *fp)
-{
-    struct scanner_input *i = GC_malloc(sizeof(struct scanner_input));
-
-    if (fp == NULL)
-    {
-        fprintf(stderr, "Null file pointer passed to struct scanner_inputFile\n");
-        exit(1);
-    }
-
-    i->fp = fp;
-    i->filename = "<unknown>";
-    i->str = NULL;
-    i->pos = 0;
-    i->line_number = 1;
-    return i;
-}
-
-/* Return an input source that reads from a file */
-struct scanner_input *scan_input_filename(char *fname)
-{
-    FILE *fp = fopen(fname, "r");
-    struct scanner_input *i = GC_malloc(sizeof(struct scanner_input));
-
-    if (fp == NULL)
-    {
-        fprintf(stderr, "Could not open file \'%s\'\n", fname);
-        exit(1);
-    }
-
-    i->fp = fp;
-    i->filename = GC_strdup(fname);
-    i->str = NULL;
-    i->pos = 0;
-    i->line_number = 1;
-    return i;
-}
-
-
-struct scanner_input *scan_input_string(char *s)
-{
-    struct scanner_input *i = GC_malloc(sizeof(struct scanner_input));
-
-    if (s == NULL)
-        die("Null string passed to struct scanner_inputFile()", 1);
-
-    i->str = s;
-    i->pos = 0;
-    i->fp = NULL;
-    i->line_number = 1;
-    return i;
 }
 
 /* Reads the next character from the input source */
@@ -175,11 +131,14 @@ static char *read_quoted_string(struct scanner_input *I)
     return s;
 }
 
-struct scanner_token scan_next(struct scanner_input *I)
+static struct scanner_token scan_next(struct scanner_input *I)
 {
     char c = 1;
     int i, num_invalid_chars = 0; 
     struct scanner_token T;
+    T.line = I->line_number;
+    T.value = NULL;
+
     while (c != 0)
     {
         c = next_char(I);
@@ -196,10 +155,11 @@ struct scanner_token scan_next(struct scanner_input *I)
             }
             name[i] = 0;
             put_back(I, c);
-            if      ( strcmp(name, "class") == 0 )      {   T.type = TOK_CLASS;     }
-            else if ( strcmp(name, "function") == 0 )   {   T.type = TOK_FUNCTION;  }
-            else if ( strcmp(name, "var") == 0 )        {   T.type = TOK_VAR;       }
-            else if ( strcmp(name, "return") == 0 )     {   T.type = TOK_RETURN;    }
+            if      ( strcmp(name, "class")     == 0 )  {   T.type = TOK_CLASS;     }
+            else if ( strcmp(name, "end")       == 0 )  {   T.type = TOK_END;       }
+            else if ( strcmp(name, "function")  == 0 )  {   T.type = TOK_FUNCTION;  }
+            else if ( strcmp(name, "return")    == 0 )  {   T.type = TOK_RETURN;    }
+            else if ( strcmp(name, "var")       == 0 )  {   T.type = TOK_VAR;       }
             else
             {
                 T.type = TOK_IDENTIFIER;
@@ -287,8 +247,8 @@ struct scanner_token scan_next(struct scanner_input *I)
             case '/':   T.type = TOK_DIV;           return T;
             case '(':   T.type = TOK_OPEN_BRACKET;  return T;
             case ')':   T.type = TOK_CLOSED_BRACKET;return T;
-            case '{':   T.type = TOK_STARTBLOCK;    return T;
-            case '}':   T.type = TOK_ENDBLOCK;      return T;
+            //case '{':   T.type = TOK_STARTBLOCK;    return T;
+            //case '}':   T.type = TOK_ENDBLOCK;      return T;
             case ',':   T.type = TOK_COMMA;         return T;
             case ';':   T.type = TOK_SEMICOLON;     return T;
             default:
@@ -304,3 +264,80 @@ struct scanner_token scan_next(struct scanner_input *I)
     return T;
 }
 
+/* Scan a file and return an array of all the tokens */
+static struct scanner_token *scan(struct scanner_input *I, unsigned int *n)
+{
+    size_t nallocated = 16, count = 0;
+    struct scanner_token *ret = GC_malloc(nallocated * sizeof(struct scanner_token));
+    struct scanner_token tok;
+
+    do
+    {
+        tok = scan_next(I);
+        if (count >= nallocated)
+        {
+            nallocated *= 2;
+            ret = GC_realloc(ret, nallocated * sizeof(struct scanner_token));
+        }
+        ret[count++] = tok;
+    } while (tok.type != TOK_EOF);
+
+    if (n)
+        *n = (unsigned int) count;
+
+    // Shrink it down to the right size
+    printf("%lu tokens, %lu bytes\n", count, count * sizeof(struct scanner_token));
+    ret = GC_realloc(ret, count * sizeof(struct scanner_token));
+    return ret;
+}
+
+struct scanner_token *scan_file(FILE *fp)
+{
+    struct scanner_input *i = GC_malloc(sizeof(struct scanner_input));
+
+    if (fp == NULL)
+        die("Null file pointer passed to struct scan_file\n");
+
+    i->fp = fp;
+    i->filename = "<unknown>";
+    i->str = NULL;
+    i->pos = 0;
+    i->line_number = 1;
+    return scan(i, NULL);
+}
+
+struct scanner_token *scan_filename(char *fname)
+{
+    FILE *fp = fopen(fname, "r");
+    struct scanner_input *i = GC_malloc(sizeof(struct scanner_input));
+    struct scanner_token *tokens = NULL;
+
+    if (fp == NULL)
+        die("Could not open file \'%s\'\n", fname);
+
+    i->fp = fp;
+    i->filename = GC_strdup(fname);
+    i->str = NULL;
+    i->pos = 0;
+    i->line_number = 1;
+
+    tokens = scan(i, NULL);
+    fclose(fp);
+
+    return tokens;
+}
+
+
+struct scanner_token *scan_string(char *s)
+{
+    struct scanner_input *i = GC_malloc(sizeof(struct scanner_input));
+
+    if (s == NULL)
+        die("Null string passed to struct scanner_inputFile()", 1);
+
+    i->str = s;
+    i->pos = 0;
+    i->fp = NULL;
+    i->line_number = 1;
+    return scan(i, NULL);
+}

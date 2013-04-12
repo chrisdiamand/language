@@ -1,28 +1,9 @@
 #!./lang
 
-class SomethingElse;
-@
-class List<T>
+class List<T> end
+class String end
 
-    T get(String name)
-        # Do stuff
-    end
-
-    SomethingElse forward;
-end
-
-class SomethingElse
-{
-    # bla bla
-    List<Int> backward;
-}
-
-#import somemodule;
-
-Int x;
+int x;
 
 Int main(List<String> args)
-{
-    Int.dosomething();
-    somemodule.DataStructure x;
-}
+end

@@ -9,8 +9,8 @@ enum scanner_type
 
     TOK_OPEN_BRACKET,   /* ( */
     TOK_CLOSED_BRACKET, /* ) */
-    TOK_STARTBLOCK,     /* { */
-    TOK_ENDBLOCK,       /* } */
+    //TOK_STARTBLOCK,     /* { */
+    //TOK_ENDBLOCK,       /* } */
 
     TOK_IDENTIFIER,
     TOK_INT,
@@ -31,35 +31,27 @@ enum scanner_type
     TOK_DIV,            /* / */
 
     TOK_CLASS,          /* 'class' */
+    TOK_END,            /* 'end' */
     TOK_FUNCTION,       /* 'function' */
-    TOK_VAR,            /* 'var' */
     TOK_RETURN,         /* 'return' */
+    TOK_VAR,            /* 'var' */
     TOK_DOT,            /* . */
     TOK_COMMA,          /* , */
     TOK_SEMICOLON,      /* ; */
-    TOK_EOF
+    TOK_EOF             /* End of file */
 };
 
 struct scanner_token
 {
-    enum scanner_type   type;
     char                *value;
-};
-
-struct scanner_input
-{
-    FILE *fp;
-    char *filename;
-    char *str;
-    unsigned long int pos, line_number;
+    enum scanner_type   type;
+    unsigned int        line;
 };
 
 char *scanner_token_name(enum scanner_type);
 
-struct scanner_input *scan_input_file(FILE *);
-struct scanner_input *scan_input_filename(char *);
-struct scanner_input *scan_input_string(char *);
-
-struct scanner_token scan_next(struct scanner_input *);
+struct scanner_token *scan_file(FILE *);
+struct scanner_token *scan_filename(char *);
+struct scanner_token *scan_string(char *);
 
 #endif

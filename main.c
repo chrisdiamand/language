@@ -23,14 +23,14 @@ void die(const char *fmt, ...)
 
 int main(int argc, char **argv)
 {
-    struct scanner_input *in = NULL;
+    struct scanner_token *in = NULL;
     struct state *S = state_new();
-    struct class_t  *main_namespace = class_new(NULL);
+    struct class_t *main_namespace = class_new(NULL);
 
     if (argc > 1)
-        in = scan_input_filename(argv[1]);
+        in = scan_filename(argv[1]);
     else
-        in = scan_input_file(stdin);
+        in = scan_file(stdin);
 
     register_builtin_types(S, main_namespace);
     compile(S, in, main_namespace);
