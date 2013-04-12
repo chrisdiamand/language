@@ -7,13 +7,22 @@
 #include "gc.h"
 #include "object.h"
 
-struct class_t *class_get(struct state *S, struct object *obj)
+struct class_t *class_from_object(struct state *S, struct object *obj)
 {
     if (obj == NULL)
         return NULL;
-    if (obj->type != S->class_class)
+    if (obj->type->cl != S->class_class)
         return NULL;
     return obj->v.cl;
+}
+
+struct class_t *class_from_type(struct state *S, struct type_t *T)
+{
+    if (T == NULL)
+        return NULL;
+    if (T->cl != S->class_class)
+        return NULL;
+    return T->v.cl;
 }
 
 /* Create a new class inheriting from parent */
@@ -34,7 +43,7 @@ struct object *class_new_obj(struct state *S, struct class_t *parent)
 {
     struct object *ret = object_new();
 
-    ret->type = S->class_class;
+    ret->type = type_from_class(S, S->class_class);
     ret->v.cl = class_new(parent);
 
     return ret;
@@ -52,7 +61,7 @@ void class_print(struct state *S, struct class_t *C)
         dict_print(C->members[DYNAMIC_MEMBER], NULL);
 }
 
-void class_add_member(struct class_t *C, enum membertype sd, char *name, struct object *value)
+void class_add_member(struct class_t *C, enum membertype sd, char *name, struct type_t *value)
 {
     assert(sd == DYNAMIC_MEMBER || sd == STATIC_MEMBER);
 
@@ -62,15 +71,15 @@ void class_add_member(struct class_t *C, enum membertype sd, char *name, struct 
     dict_set(C->members[sd], name, (void *) value);
 }
 
-struct object *class_get_static_member(struct class_t *C, char *name)
+struct type_t *class_get_static_member(struct class_t *C, char *name)
 {
     while (C)
     {
-        struct object *ret;
+        struct type_t *ret;
         if (!C->members[STATIC_MEMBER])
             ret = NULL;
         else
-            ret = (struct object *) dict_get(C->members[STATIC_MEMBER], name);
+            ret = (struct type_t *) dict_get(C->members[STATIC_MEMBER], name);
         if (ret)
             return ret;
         C = C->parent;

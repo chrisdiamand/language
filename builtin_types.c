@@ -18,10 +18,10 @@ static struct object *integer_add(struct state *S, struct object **args)
     signed long l = lobj->v.integer;
     signed long r = robj->v.integer;
 
-    struct object *ret = new_instance(class_int);
+    struct object *ret = new_instance(S, class_int);
     
-    assert(lobj->type == class_int);
-    assert(robj->type == class_int);
+    assert(lobj->type->cl == class_int);
+    assert(robj->type->cl == class_int);
 
     /* The actual addition */
     ret->v.integer = l + r;
@@ -29,22 +29,19 @@ static struct object *integer_add(struct state *S, struct object **args)
     return ret;
 }
 
-static struct object *integer_class(struct state *S)
+static struct type_t *integer_class(struct state *S)
 {
-    const char *two_op_types[] = {"integer", "integer", "integer", NULL};
-    struct object *C = class_new_obj(S, S->class_object);
-
     /* Actually create the class */
-    class_int = C->v.cl;
+    class_int = class_new(S->class_object);
 
-    class_add_member(class_int, STATIC_MEMBER, "+", method_from_C(S, integer_add, two_op_types));
+    class_add_member(class_int, STATIC_MEMBER, "_add_",
+                     method_from_C(S, integer_add, "int _add_(int a)"));
 
-    return C;
+    return type_from_class(S, class_int);
 }
 
 void register_builtin_types(struct state *S, struct class_t *N)
 {
     class_add_member(N, STATIC_MEMBER, "int", integer_class(S));
-    state_class_to_scope(S, "int", class_int);
 }
 

@@ -1,6 +1,8 @@
 #ifndef STATE_H
 #define STATE_H
 
+#include "type.h"
+
 struct state
 {
     /* Base classes */
@@ -11,13 +13,12 @@ struct state
     struct class_t          *class_int;
     struct class_t          *class_double;
 
-    /* Stack of dictionaries of classes to know which classes
-     * are visible in the current scope */
+    /* Stack of classes to know which classes are visible
+     * in the current scope during the first pass */
     struct stack            *typescope;
 };
 
 struct state *state_new(void);
-void state_class_to_scope(struct state *, char *, struct class_t *);
-struct class_t *state_find_class(struct state *, char *);
+struct type_t *state_lookup_global(struct state *, char *);
 
 #endif

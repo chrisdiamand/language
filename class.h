@@ -25,9 +25,10 @@ struct class_t
 
 struct class_t *class_new(struct class_t *);
 struct object *class_new_obj(struct state *, struct class_t *);
-struct class_t *class_get(struct state *, struct object *);
+struct class_t *class_from_object(struct state *, struct object *);
+struct class_t *class_from_type(struct state *, struct type_t *);
 void class_print(struct state *, struct class_t *);
-void class_add_member(struct class_t *, enum membertype, char *, struct object *);
-struct object *class_get_static_member(struct class_t *C, char *name);
+void class_add_member(struct class_t *, enum membertype, char *, struct type_t *);
+struct type_t *class_get_static_member(struct class_t *C, char *name);
 
 #endif

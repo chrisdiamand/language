@@ -64,9 +64,6 @@ static void class_typename_list(struct class_t *cl)
         typenames[i] = ct.value;
         expect(TOK_IDENTIFIER);
 
-        /* Add the typename to the scope of the current class */
-        state_class_to_scope(C->S, typenames[i], C->S->class_object);
-
         if (ct.type != TOK_COMMA)
             break;
         expect(TOK_COMMA);
@@ -89,14 +86,12 @@ static void class_declaration(struct class_t *namespace)
     classname = ct.value;
     expect(TOK_IDENTIFIER);
 
-    /* Add it to the scope */
-    state_class_to_scope(C->S, classname, cl);
-    /* And the namespace/outer class */
+    /* Add to the namespace/outer class so it can reference itself */
     class_add_member(namespace, STATIC_MEMBER, classname,
-                     object_from_class(C->S, cl));
+                     type_from_class(C->S, cl));
 
     /* Increase the scope level */
-    stack_push(C->S->typescope, dict_new());
+    stack_push(C->S->typescope, cl);
 
     /* Template typename list */
     if (ct.type == TOK_LT)
@@ -115,13 +110,19 @@ static struct type_t *type_specifier(void)
 {
     char *typename = ct.value;
     struct class_t *cl;
-    struct type_t *ret = NULL;
+    struct type_t *ret = NULL, *class_type;
     expect(TOK_IDENTIFIER);
-    cl = state_find_class(C->S, typename);
+    class_type = state_lookup_global(C->S, typename);
 
-    if (!cl)
+    if (!class_type)
     {
         fprintf(stderr, "No such type %s\n", typename);
+        return NULL;
+    }
+    if (class_type->cl != C->S->class_class)
+    {
+        fprintf(stderr, "\'%s\' used in declaration but isn't of type \'class\'\n",
+                typename);
         return NULL;
     }
 
@@ -134,7 +135,7 @@ static struct type_t *type_specifier(void)
         innername = ct.value;
         expect(TOK_IDENTIFIER);
 
-        innercl = class_get(C->S, class_get_static_member(cl, innername));
+        innercl = class_from_type(C->S, class_get_static_member(cl, innername));
         if (!innercl)
         {
             fprintf(stderr, "Error: Class %s has no inner class %s\n",
@@ -209,7 +210,8 @@ void compile(struct state *S, struct scanner_token *tokens, struct class_t *name
     C->tokens = tokens;
     C->tokenpos = 0;
     C->S = S;
-    printf("Compiling\n");
+    /* Add the namespace to the outer level of scope */
+    stack_push(S->typescope, namespace);
 
     next_token();
 
