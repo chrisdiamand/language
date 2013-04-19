@@ -1,8 +1,12 @@
 #!./lang
 
 class List<C> end
+class sfdf end
+int foo;
 
-int x, y, z;
+class blabla end
+
+int x, z, y, foobar;
 List<int> vector;
 
 int main()

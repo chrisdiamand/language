@@ -16,6 +16,8 @@
  */
 
 #include <assert.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "class.h"
 #include "gc.h"
@@ -27,6 +29,7 @@ struct type_t *type_new(struct class_t *cl)
     assert(cl);
     if (cl->nparams > 0)
         T->params = GC_malloc(sizeof(struct type_t *) * cl->nparams);
+    T->cl = cl;
     return T;
 }
 
@@ -46,3 +49,20 @@ struct type_t *type_from_method(struct state *S, struct method_t *method)
     return T;
 }
 
+size_t type_to_string(struct type_t *T, char *buf, size_t stringlen)
+{
+    size_t pos;
+    assert(T);
+    assert(T->cl);
+    pos = strlen(T->cl->name);
+    snprintf(buf, stringlen, "%s", T->cl->name);
+    if (T->cl->nparams > 0)
+    {
+        int i;
+        snprintf(buf + pos, stringlen - pos++, "<");
+        for (i = 0; i < T->cl->nparams; i++)
+            pos += type_to_string(T->params[i], buf + pos, stringlen - pos);
+        snprintf(buf + pos, stringlen - pos++, ">");
+    }
+    return pos;
+}

@@ -27,17 +27,11 @@
 #define N_BUCKETS (1 << N_BUCKETS_POWER)
 #define N_BUCKETS_MASK (N_BUCKETS - 1)
 
-struct keyvalue
-{
-    char                *key;
-    dict_value          value;
-};
-
 struct sorted_list
 {
     int                 len;
     int                 size;
-    struct keyvalue     *list;
+    struct dict_pair     *list;
 };
 
 struct dict
@@ -47,14 +41,14 @@ struct dict
     unsigned int        bucket, pos;
 };
 
-static void insert_at_pos(struct sorted_list *L, struct keyvalue kv, int pos)
+static void insert_at_pos(struct sorted_list *L, struct dict_pair kv, int pos)
 {
     int i;
 
     if (L->len >= L->size) /* >= as len is going to increase by one */
     {
         L->size += 4; /* Leave a bit of room */
-        L->list = GC_realloc(L->list, L->size * sizeof(struct keyvalue));
+        L->list = GC_realloc(L->list, L->size * sizeof(struct dict_pair));
         assert(L->list != NULL);
     }
 
@@ -120,9 +114,9 @@ static void copy_sorted_list(struct sorted_list *dest, struct sorted_list *src)
 {
     printf("***COPY***\n");
     dest->size = dest->len = src->len;
-    dest->list = GC_malloc(sizeof(struct keyvalue) * dest->len);
+    dest->list = GC_malloc(sizeof(struct dict_pair) * dest->len);
 
-    memcpy(dest->list, src->list, sizeof(struct keyvalue) * dest->len);
+    memcpy(dest->list, src->list, sizeof(struct dict_pair) * dest->len);
 }
 
 /* Copy the elements into a new dictionary */
@@ -143,7 +137,7 @@ void dict_set(struct dict *D, char *key, dict_value val)
 {
     struct sorted_list *L = D->tbl + hash(key);
     int list_pos = search(L, key);
-    struct keyvalue kv;
+    struct dict_pair kv;
 
     if (L->list && L->size > 0 && list_pos < L->len)
     {
@@ -176,6 +170,7 @@ dict_value dict_get(struct dict *D, char *key)
 void dict_print(struct dict *D, dict_print_function_t printfunc)
 {
     int i, j;
+    assert(D != NULL);
     for (i = 0; i < N_BUCKETS; i++)
     {
         struct sorted_list *L = D->tbl + i;
@@ -194,37 +189,27 @@ void dict_print(struct dict *D, dict_print_function_t printfunc)
     }
 }
 
-/* Set all iterator counters to 0 so iteration can begin */
-void dict_begin(struct dict *D)
+struct dict_pair *dict_next(struct dict *D)
 {
-    if (D)
-        D->bucket = D->pos = 0;
-}
+    assert(D);
 
-dict_value dict_next(struct dict *D, char **namep)
-{
-    struct keyvalue *item;
-    if  (!D)
-        return NULL;
-
-    /* See if it is finished */
-    if (D->bucket >= N_BUCKETS - 1
-        && D->pos >= D->tbl[N_BUCKETS - 1].len)
-        return NULL;
-
-    /* Do we need to move on to the next bucket? */
-    if (D->pos >= D->tbl[D->bucket].len)
+    /* Go through the buckets until will find one with
+     * something in it (which could be the current one) */
+    while (D->bucket < N_BUCKETS)
     {
+        if (D->pos < D->tbl[D->bucket].len)
+            return D->tbl[D->bucket].list + (D->pos++);
         D->bucket++;
         D->pos = 0;
     }
 
-    item = D->tbl[D->bucket].list + D->pos;
-
-    D->pos++;
-
-    if (namep)
-        *namep = item->key;
-    return item->value;
+    return NULL;
 }
 
+/* Set all iterator counters to 0 so iteration can begin */
+struct dict_pair *dict_begin(struct dict *D)
+{
+    assert(D);
+    D->bucket = D->pos = 0;
+    return dict_next(D);
+}

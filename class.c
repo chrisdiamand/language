@@ -49,8 +49,8 @@ struct class_t *class_new(char *name, struct class_t *parent)
 
     cl->name = name;
     cl->parent = parent;
-    cl->members[DYNAMIC_MEMBER] = NULL;
-    cl->members[STATIC_MEMBER] = NULL;
+    cl->members[DYNAMIC_MEMBER] = dict_new();
+    cl->members[STATIC_MEMBER] = dict_new();
     cl->nparams = 0;
     cl->paramnames = NULL;
 
@@ -59,23 +59,33 @@ struct class_t *class_new(char *name, struct class_t *parent)
 
 void class_print(struct state *S, struct class_t *C)
 {
+    struct dict_pair *pair = NULL;
+
     printf("Class %p extends parent %p\n", (void *) C, (void *) C->parent);
-    printf("Members:\n");
 
-    if (C->members[STATIC_MEMBER])
-        dict_print(C->members[STATIC_MEMBER], NULL);
+    for (pair = dict_begin(C->members[STATIC_MEMBER]);
+         pair != NULL;
+         pair = dict_next(C->members[STATIC_MEMBER]))
+    {
+        char buf[512];
+        type_to_string((struct type_t *) pair->value, buf, sizeof(buf));
+        printf("    static %s %s;\n", buf, pair->key);
+    }
 
-    if (C->members[DYNAMIC_MEMBER])
-        dict_print(C->members[DYNAMIC_MEMBER], NULL);
+    for (pair = dict_begin(C->members[DYNAMIC_MEMBER]);
+         pair != NULL;
+         pair = dict_next(C->members[DYNAMIC_MEMBER]))
+    {
+        char buf[512];
+        type_to_string((struct type_t *) pair->value, buf, sizeof(buf));
+        printf("    %s %s;\n", buf, pair->key);
+    }
 }
 
 void class_add_member(struct class_t *C, enum membertype sd, char *name, struct type_t *value)
 {
     assert(sd == DYNAMIC_MEMBER || sd == STATIC_MEMBER);
-
-    if (!C->members[sd])
-        C->members[sd] = dict_new();
-
+    assert(C->members[sd]);
     dict_set(C->members[sd], name, (void *) value);
 }
 
