@@ -1,8 +1,14 @@
 #!./lang
 
 class List<C> end
-class sfdf end
+
+class Out
+    class In end
+end
+
 int foo;
+
+Out.In hokey;
 
 class blabla end
 
