@@ -166,7 +166,7 @@ static struct type_t *type_specifier(void)
         struct class_t *innercl;
         expect(TOK_DOT);
         innername = ct.value;
-        expect(TOK_IDENTIFIER);
+        expect(TOK_CLASSNAME);
 
         innercl = class_from_type(C->S, class_get_static_member(cl, innername));
         if (!innercl)
