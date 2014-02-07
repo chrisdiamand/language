@@ -19,7 +19,6 @@
 #define COMPILER_TYPE_H
 
 #include "class.h"
-#include "dict.h"
 #include "method.h"
 #include "state.h"
 

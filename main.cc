@@ -21,7 +21,6 @@
 
 #include "class.h"
 #include "src_to_pt.h"
-#include "dict.h"
 #include "gc.h"
 #include "object.h"
 #include "run.h"

@@ -20,7 +20,6 @@
 #include <stdlib.h>
 
 #include "class.h"
-#include "dict.h"
 #include "gc.h"
 #include "object.h"
 

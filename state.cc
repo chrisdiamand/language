@@ -19,9 +19,7 @@
 #include <stdio.h>
 
 #include "class.h"
-#include "dict.h"
 #include "gc.h"
-#include "stack.h"
 #include "state.h"
 
 // Look up a global (usually a class name) from the stack of classes

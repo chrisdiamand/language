@@ -1,17 +1,15 @@
-src = ["builtin_types.c",
-       "class.c",
-       "dict.c",
-       "gc.c",
-       "main.c",
-       "method.c",
-       "object.c",
-       "parse_tree.c",
-       "run.c",
-       "scanner.c",
-       "src_to_pt.c",
-       "stack.c",
-       "state.c",
-       "type.c"]
+src = ["builtin_types.cc",
+       "class.cc",
+       "gc.cc",
+       "main.cc",
+       "method.cc",
+       "object.cc",
+       "parse_tree.cc",
+       "run.cc",
+       "scanner.cc",
+       "src_to_pt.cc",
+       "state.cc",
+       "type.cc"]
 lang = CProg("lang", src)
 
 makefile = Makefile([lang])

@@ -22,12 +22,10 @@
 #include <string.h>
 
 #include "class.h"
-#include "dict.h"
 #include "gc.h"
 #include "object.h"
 #include "scanner.h"
 #include "src_to_pt.h"
-#include "stack.h"
 #include "state.h"
 #include "type.h"
 
@@ -130,11 +128,11 @@ static void class_declaration(struct class_t *namespace)
     cl = class_new(classname, C->S->class_object);
 
     /* Add to the namespace/outer class so it can reference itself */
-    class_add_member(namespace, STATIC_MEMBER, classname,
-                     type_from_class(C->S, cl));
+    //class_add_member(namespace, STATIC_MEMBER, classname,
+    //                 type_from_class(C->S, cl));
 
     /* Increase the scope level */
-    stack_push(C->S->typescope, cl);
+    //stack_push(C->S->typescope, cl);
 
     /* Template typename list */
     if (ct.type == TOK_LT)
@@ -239,7 +237,7 @@ static void function_or_variable_declaration(struct class_t *namespace)
 
 /* Parse a list of declarations (variables, methods and classes)
  * and add them to namespace/class N */
-static void class_body(struct class_t *N, enum scanner_type finish)
+static struct pt *class_body(struct class_t *N, enum scanner_type finish)
 {
     int errorcount = 0;
 
@@ -267,7 +265,7 @@ static void class_body(struct class_t *N, enum scanner_type finish)
     }
 }
 
-void compile(struct state *S, struct scanner_token *tokens, struct class_t *namespace)
+struct pt *src_to_pt(struct state *S, struct scanner_token *tokens, struct class_t *namespace)
 {
     C = GC_malloc(sizeof(struct compiler));
     C->tokens = tokens;

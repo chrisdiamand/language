@@ -1,5 +1,5 @@
-#ifndef PTREE_H
-#define PTREE_H
+#ifndef PARSE_TREE_H
+#define PARSE_TREE_H
 
 // Parse tree structure
 
@@ -9,13 +9,12 @@ enum pt_t {
     PT_FUNC_DEF
 };
 
-struct pt {
-    enum pt_t       type;
-    union {
-        int         n;
-    } v;
+class ParseTree { };
+
+class ParseTree_ClassDef : ParseTree {
+public:
+    ParseTree(char *);
+    char *name;
 };
 
-struct pt *pt_class_def(void);
-
-#endif
+#endif /* PARSE_TREE_H */
