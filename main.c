@@ -20,7 +20,7 @@
 #include <stdlib.h>
 
 #include "class.h"
-#include "src_to_ptree.h"
+#include "src_to_pt.h"
 #include "dict.h"
 #include "gc.h"
 #include "object.h"
