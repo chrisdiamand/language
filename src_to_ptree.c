@@ -22,11 +22,11 @@
 #include <string.h>
 
 #include "class.h"
-#include "compiler.h"
 #include "dict.h"
 #include "gc.h"
 #include "object.h"
 #include "scanner.h"
+#include "src_to_ptree.h"
 #include "stack.h"
 #include "state.h"
 #include "type.h"
